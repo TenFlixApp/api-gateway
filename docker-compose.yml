@@ -2,37 +2,44 @@ services:
   db_guardian:
     container_name: db_guardian
     image: docker.io/library/mariadb
-    restart: unless-stopped
+    restart: on-failure:2
     environment:
       MYSQL_ROOT_PASSWORD: ${GUARDIAN_DB_PASSWORD}
     ports:
       - "${GUARDIAN_DB_PORT}:3306"
     volumes:
       - "db_guardian_data:/var/lib/mysql"
+      - "./init/guardian:/docker-entrypoint-initdb.d:ro"
 
   db_backend:
     container_name: db_backend
     image: docker.io/library/mariadb
-    restart: unless-stopped
+    restart: on-failure:2
     environment:
       MYSQL_ROOT_PASSWORD: ${BACKEND_DB_PASSWORD}
     ports:
       - "${BACKEND_DB_PORT}:3306"
     volumes:
       - "db_backend_data:/var/lib/mysql"
+      - "./init/backend:/docker-entrypoint-initdb.d:ro"
 
   db_collector:
     container_name: db_collector
     image: mongodb/mongodb-community-server
-    restart: unless-stopped
+    restart: on-failure:2
     environment:
-      MONGO_INITDB_ROOT_PASSWORD: ${COLLECTOR_DB_PASSWORD}
+      MONGODB_INITDB_ROOT_USERNAME: ${COLLECTOR_DB_USER}
+      MONGODB_INITDB_ROOT_PASSWORD: ${COLLECTOR_DB_PASSWORD}
     ports:
       - "${COLLECTOR_DB_PORT}:27017"
     volumes:
       - "db_collector_data:/data/db"
+      - "./init/collector:/docker-entrypoint-initdb.d:ro"
 
 volumes:
   db_guardian_data:
+    external: true
   db_backend_data:
+    external: true
   db_collector_data:
+    external: true
