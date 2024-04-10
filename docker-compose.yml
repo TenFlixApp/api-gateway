@@ -2,39 +2,71 @@ services:
   db_guardian:
     container_name: db_guardian
     image: docker.io/library/mariadb
-    restart: on-failure:2
     environment:
-      MYSQL_ROOT_PASSWORD: ${GUARDIAN_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: "${GUARDIAN_DB_PASSWORD}"
     ports:
       - "${GUARDIAN_DB_PORT}:3306"
     volumes:
       - "db_guardian_data:/var/lib/mysql"
       - "./init/guardian:/docker-entrypoint-initdb.d:ro"
 
+  guardian:
+    container_name: guardian
+    build: ../guardian
+    environment:
+      - "GO_SECRET_KEY_ACCESS_TOKEN=${GUARDIAN_GO_SECRET_KEY_ACCESS_TOKEN}"
+      - "GO_SECRET_KEY_REFRESH_TOKEN=${GUARDIAN_GO_SECRET_KEY_REFRESH_TOKEN}"
+      - "DB_CONN_STRING=${GUARDIAN_DB_CONN_STRING}"
+
   db_backend:
     container_name: db_backend
     image: docker.io/library/mariadb
-    restart: on-failure:2
     environment:
-      MYSQL_ROOT_PASSWORD: ${BACKEND_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: "${BACKEND_DB_PASSWORD}"
     ports:
       - "${BACKEND_DB_PORT}:3306"
     volumes:
       - "db_backend_data:/var/lib/mysql"
       - "./init/backend:/docker-entrypoint-initdb.d:ro"
 
+  backend:
+    container_name: backend
+    build: ../backend
+    environment:
+      - "GO_SECRET_KEY_ACCESS_TOKEN=${BACKEND_GO_SECRET_KEY_ACCESS_TOKEN}"
+      - "GO_SECRET_KEY_REFRESH_TOKEN=${BACKEND_GO_SECRET_KEY_REFRESH_TOKEN}"
+      - "DB_CONN_STRING=${BACKEND_DB_CONN_STRING}"
+      - "MYSQL_ROOT_PASSWORD=${BACKEND_MYSQL_ROOT_PASSWORD}"
+      - "GUARDIAN_ROUTE=${BACKEND_GUARDIAN_ROUTE}"
+      - "FILE_MANAGER_ROUTE=${BACKEND_FILE_MANAGER_ROUTE}"
+    ports:
+      - "${BACKEND_PORT}:8080"
+
+  file-manager:
+    container_name: file-manager
+    build: ../file-manager
+    environment:
+      - "DB_CONN_STRING=${FILE_MANAGER_DB_CONN_STRING}"
+    ports:
+      - "${FILE_MANAGER_PORT}:8080"
+
   db_collector:
     container_name: db_collector
     image: mongodb/mongodb-community-server
-    restart: on-failure:2
     environment:
-      MONGODB_INITDB_ROOT_USERNAME: ${COLLECTOR_DB_USER}
-      MONGODB_INITDB_ROOT_PASSWORD: ${COLLECTOR_DB_PASSWORD}
+      MONGODB_INITDB_ROOT_USERNAME: "${COLLECTOR_DB_USER}"
+      MONGODB_INITDB_ROOT_PASSWORD: "${COLLECTOR_DB_PASSWORD}"
     ports:
       - "${COLLECTOR_DB_PORT}:27017"
     volumes:
       - "db_collector_data:/data/db"
       - "./init/collector:/docker-entrypoint-initdb.d:ro"
+
+  collector:
+    container_name: collector
+    build: ../collector
+    environment:
+      - "DB_CONN_STRING=${COLLECTOR_DB_CONN_STRING}"
 
 volumes:
   db_guardian_data:
