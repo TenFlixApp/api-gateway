@@ -1,0 +1,32 @@
+services:
+  guardian:
+    container_name: guardian
+    build: ../guardian
+    volumes:
+      - "../guardian/.env:/app/.env:ro"
+    ports:
+      - "${GUARDIAN_PORT}:8080"
+
+  backend:
+    container_name: backend
+    build: ../backend
+    volumes:
+      - "../backend/.env:/app/.env:ro"
+    ports:
+      - "${BACKEND_PORT}:8088"
+
+  file-manager:
+    container_name: file-manager
+    build: ../file-manager
+    volumes:
+      - "../file-manager/.env:/app/.env:ro"
+    ports:
+      - "${FILE_MANAGER_PORT}:8888"
+
+  collector:
+    container_name: collector
+    build: ../collector
+    volumes:
+      - "../collector/.env:/app/.env:ro"
+    ports:
+      - "${COLLECTOR_PORT}:8089"
